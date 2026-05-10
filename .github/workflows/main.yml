@@ -1,8 +1,12 @@
+name: update-sheet
+
 on:
   schedule:
-    # यह समय 14:45 UTC है, जिसका मतलब भारत में रात 8:15 PM है
     - cron: '20 1 * * 1-5'
   workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # Add this line
 
 jobs:
   update-sheet:
