@@ -41,20 +41,29 @@ def fetch_bhavcopy_for_date(date_obj):
                     close_col = 'ClsPric' if 'ClsPric' in df.columns else 'CLOSE'
                     series_col = 'SctySrs' if 'SctySrs' in df.columns else 'SERIES'
                     
-                    vol_col = 'TtlTradgVol'
-                    for c in ['TtlTradgVol', 'TtlTrdQty', 'TotTrdQty', 'TOTTRDQTY']:
-                        if c in df.columns:
-                            vol_col = c
-                            break
+                    # vol_col = 'TtlTradgVol'
+                    # for c in ['TtlTradgVol', 'TtlTrdQty', 'TotTrdQty', 'TOTTRDQTY']:
+                    #     if c in df.columns:
+                    #         vol_col = c
+                    #         break
                     
-                    # सिर्फ EQ सीरीज और ETFs (LIQUID/BEES) को बाहर करना
-                    if series_col in df.columns:
+                    # # सिर्फ EQ सीरीज और ETFs (LIQUID/BEES) को बाहर करना
+                    # if series_col in df.columns:
+                    #     df = df[df[series_col].astype(str).str.strip() == 'EQ']
+
+                    turnover_col = next((c for c in ['TtlTrfVal', 'TtlTrdVal', 'TURNOVER_LACS', 'TURNOVER'] if c in df.columns), None)
+
+                    if not all([sym_col, close_col, turnover_col]):
+                        return None
+                    if series_col:
                         df = df[df[series_col].astype(str).str.strip() == 'EQ']
-                    filter_keywords = 'BEES|ETF|GOLD|LIQUID|CASE|SILVER|LIQ'
+                  
+                    filter_keywords = 'BEES|ETF|GOLD|LIQUID|CASE|SILVER|LIQ|SLV'
                     df = df[~df[sym_col].astype(str).str.contains(filter_keywords, case=False, na=False)]
-                    
-                    df_top = df.sort_values(by=vol_col, ascending=False).head(250)
-                    return df_top[[sym_col, vol_col, close_col]].values.tolist()
+                    df[turnover_col] = pd.to_numeric(df[turnover_col], errors='coerce')
+                    df = df.dropna(subset=[turnover_col])
+                    df_top = df.sort_values(by=turnover_col, ascending=False).head(250)
+                    return df_top[[sym_col, turnover_col, close_col]].values.tolist()
         return None
     except:
         return None
